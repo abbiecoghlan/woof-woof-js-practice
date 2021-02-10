@@ -1,3 +1,145 @@
+function main(){
+    fetchDogs()
+    addingToggleListener()
+}
+
+const dogsUrl = "http://localhost:3000/pups"
+let filterOn = false
+let allDogs = ""
+
+function fetchDogs(){
+    fetch(dogsUrl)
+    .then(resp => resp.json())
+    .then( dogs => {
+        allDogs = dogs
+        dogs.forEach(dog => {  
+        addDogToBar(dog)
+        })
+    })
+}
+
+function addDogToBar(dog){
+    const dogBar = document.querySelector('#dog-bar')
+    const newSpan = document.createElement('span')
+    newSpan.innerText = dog.name
+    newSpan.id = dog.id
+    newSpan.addEventListener('click', displayDog)
+    dogBar.append(newSpan)
+}
+
+function displayDog(e){
+    const id = e.target.id
+    const dogInfoDiv = document.querySelector('#dog-info')
+    dogInfoDiv.innerHTML = ""
+    let hTWO = document.createElement('h2')
+    let pic = document.createElement('img')
+    let newButton = document.createElement('button')
+    
+    dogInfoDiv.append(pic, hTWO, newButton)
+
+    fetch(`http://localhost:3000/pups/${id}`)
+    .then(resp => resp.json())
+    .then( dog => {  
+            hTWO.innerText = dog.name
+            pic.setAttribute("src", dog.image)
+            if (dog.isGoodDog){
+                newButton.innerText = "Good Dog!"
+                newButton.addEventListener("click", isBadNow)
+            } else {
+                newButton.innerText = "Bad Dog"
+                newButton.addEventListener("click", isGoodNow)
+            }            
+            newButton.setAttribute('id', dog.id)
+        })
+}
+
+
+
+function isGoodNow(e){
+    const id = e.target.id
+
+    const reqObj = {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: "application/json"
+        },
+        body: JSON.stringify(
+        { isGoodDog : true
+        })
+      }
+    
+    fetch(`http://localhost:3000/pups/${id}`, reqObj)
+        .then((res) => res.json())
+        .then(dog => {
+          displayDog(e)
+          if (filterOn){
+          addDogToBar(dog)
+          }
+        })
+}
+
+function isBadNow(e){
+    const id = e.target.id
+
+    const reqObj = {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: "application/json"
+        },
+        body: JSON.stringify(
+        { isGoodDog : false
+        })
+      }
+    
+      fetch(`http://localhost:3000/pups/${id}`, reqObj)
+        .then((res) => res.json())
+        .then(dog => {
+          displayDog(e)
+          if (filterOn){
+                let dogSpan = document.querySelector(`span[id='${dog.id}']`)
+                dogSpan.remove()}
+        })
+}
+
+function addingToggleListener(){
+    const toggleButton = document.body.querySelector('#good-dog-filter')
+    toggleButton.addEventListener('click', toggleDogs)
+}
+
+function toggleDogs(e){
+    console.log("you clicked~")
+    const dogBar = document.querySelector('#dog-bar')
+    dogBar.innerHTML = ""
+    if (e.target.innerText.includes("OFF")){
+        e.target.innerText = "Filter good dogs: ON"
+        filterOn = true
+ 
+        fetch(dogsUrl)
+        .then(resp => resp.json())
+        .then( dogs => {
+            dogs.forEach(dog => {  
+                if (dog.isGoodDog){
+                    addDogToBar(dog)
+                }
+            })
+        })   
+    } else {
+        e.target.innerText = "Filter good dogs: OFF"
+        filterOn = false
+        allDogs.forEach(dog =>{
+        addDogToBar(dog)    
+        })
+    }
+}
+
+
+
+main()
+
+
+
 // defer
 //make main function
 //fetch the API info from the server 
@@ -26,7 +168,7 @@
     // create an h2 with the dogs name
     //create  a an img tag and set it to the dogs image 
     // create a button that says good dog or bad dog based on whther isgooddog is true or false
-    // add an event listener to the button with the toggle dog response on click
+    // add an event listener to the button with the good or bad dog function response on click
     // set the id of the button to the id of the 
     //append h2, img, and button to the div
 
@@ -39,99 +181,3 @@
 
 //make sure each function is called in main
 // call main function
-
-const dogsUrl = "http://localhost:3000/pups"
-
-
-
-function main(){
-    fetchDogs()
-}
-
-
-function fetchDogs(){
-    fetch(dogsUrl)
-    .then(resp => resp.json())
-    .then( dogs => {
-        dogs.forEach(dog => {  
-        addDogToBar(dog)
-        })
-    })
-}
-
-
-//display dogs on dog bar 
-            //set attribute of class to good dog? (might not need this?)    
-
-
-function addDogToBar(dog){
-    const dogBar = document.querySelector('#dog-bar')
-    const newSpan = document.createElement('span')
-    newSpan.innerText = dog.name
-    newSpan.id = dog.id
-    newSpan.addEventListener('click', displayDog)
-    dogBar.append(newSpan)
-
-    // console.log(`hi lil ${dog.name}, ${dog.id}, your good dog status is ${dog.isGoodDog}`)
-}
-
-
-// displayDog(e)
-
-    // there is a div called called dog-info - capture this 
-    //load the dog's information into the div and display it on the page
-    // create an h2 with the dogs name
-    //create  a an img tag and set it to the dogs image 
-    // create a button that says good dog or bad dog based on whther isgooddog is true or false
-    // add an event listener to the button with the toggle dog response on click
-    // set the id of the button to the id of the 
-    //append h2, img, and button to the div
-
-function displayDog(e){
-    const id = e.target.id
-    const dogInfoDiv = document.querySelector('#dog-info')
-    dogInfoDiv.innerHTML = ""
-    let hTWO = document.createElement('h2')
-    let pic = document.createElement('img')
-    let newButton = document.createElement('button')
-    
-
-
-    dogInfoDiv.append(hTWO, pic, newButton)
-
-    fetch(`http://localhost:3000/pups/${id}`)
-    .then(resp => resp.json())
-    .then( dog => {  
-            hTWO.innerText = dog.name
-            pic.setAttribute("src", dog.image)
-            if (dog.isGoodDog){
-                newButton.innerText = "Good Dog!"
-                newButton.addEventListener("click", isBadNow)
-            } else {
-                newButton.innerText = "Bad Dog"
-                newButton.addEventListener("click", isGoodNow)
-            }            
-            newButton.setAttribute('id', toy.id)
-
-        })
-
-}
-
-function isGoodNow(e){
-    console.log("you gotta make this dog good")
-}
-
-function isBadNow(e){
-    console.log("you gotta make this dog bad")
-}
-
-main()
-
-
-// function addDogToSpan(dog){
-//     const span = document.createElement('span')
-//     const div = document.querySelector('#dog-bar')
-//     span.id = dog.id
-//     span.innerText = dog.name
-//     div.append(span)
-// }
